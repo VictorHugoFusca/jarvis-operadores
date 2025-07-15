@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tabela Dinâmica - Horários dos Operadores</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    th input {
+      width: 100%;
+      font-size: 0.9rem;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body class="bg-light">
+<div class="container my-5">
+  <h1 class="text-center mb-4">📊 Tabela Dinâmica - Horários dos Operadores</h1>
+
+  <div class="alert alert-info">
+    <strong>ℹ️ Informações:</strong> Esta tabela apresenta os horários organizados por operador diretamente do JARVIS, incluindo início e fim do almoço e descansos.
+  </div>
+
+  <div class="mb-4">
+    <textarea id="dadosInput" class="form-control mb-2" rows="6" placeholder="📋 Cole aqui os dados no formato: Nome Operador | Nome Líder | Início Conexão | Fim Conexão | Início Almoço | Fim Almoço | Descanso 1 | Descanso 2 | Status"></textarea>
+    <button onclick="processarDados()" class="btn btn-success me-2">📊 Processar Dados</button>
+    <button onclick="limparDados()" class="btn btn-danger me-2">🗑️ Limpar Dados</button>
+    <button onclick="baixarExcel()" class="btn btn-primary">📥 Baixar Excel</button>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover" id="tabelaOperadores">
+      <thead class="table-light">
+        <tr>
+          <th>Operador<br><input type="text" onkeyup="filtrarTabela(0)" placeholder="Filtrar"></th>
+          <th>Líder<br><input type="text" onkeyup="filtrarTabela(1)" placeholder="Filtrar"></th>
+          <th>Início Conexão<br><input type="text" onkeyup="filtrarTabela(2)" placeholder="Filtrar"></th>
+          <th>Fim Conexão<br><input type="text" onkeyup="filtrarTabela(3)" placeholder="Filtrar"></th>
+          <th>Início Almoço<br><input type="text" onkeyup="filtrarTabela(4)" placeholder="Filtrar"></th>
+          <th>Fim Almoço<br><input type="text" onkeyup="filtrarTabela(5)" placeholder="Filtrar"></th>
+          <th>Descanso 1<br><input type="text" onkeyup="filtrarTabela(6)" placeholder="Filtrar"></th>
+          <th>Descanso 2<br><input type="text" onkeyup="filtrarTabela(7)" placeholder="Filtrar"></th>
+          <th>Status<br><input type="text" onkeyup="filtrarTabela(8)" placeholder="Filtrar"></th>
+        </tr>
+      </thead>
+      <tbody id="corpoTabela">
+        <tr><td colspan="9" class="text-center text-muted">Nenhum dado carregado.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+let dados = [];
+
+function processarDados() {
+  const input = document.getElementById('dadosInput').value.trim();
+  if (!input) return alert('Cole os dados primeiro.');
+
+  dados = [];
+  const linhas = input.split('\n').filter(l => l.trim() !== '');
+
+  linhas.forEach(linha => {
+    const partes = linha.split(/\s{2,}|\t|\|/).map(s => s.trim()).filter(Boolean);
+    if (partes.length >= 9) {
+      const [operador, lider, inicioConexao, fimConexao, inicioAlmoco, fimAlmoco, descanso1, descanso2, ...rest] = partes;
+      const status = rest.join(' ') || 'Turno programado';
+
+      dados.push({
+        operador,
+        lider,
+        inicioConexao,
+        fimConexao,
+        inicioAlmoco,
+        fimAlmoco,
+        descanso1,
+        descanso2,
+        status
+      });
+    }
+  });
+
+  carregarTabela();
+  alert(`${dados.length} registros carregados.`);
+}
+
+function limparDados() {
+  document.getElementById('dadosInput').value = '';
+  dados = [];
+  carregarTabela();
+}
+
+function carregarTabela() {
+  const corpo = document.getElementById('corpoTabela');
+  if (dados.length === 0) {
+    corpo.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Nenhum dado.</td></tr>';
+    return;
+  }
+
+  corpo.innerHTML = dados.map(d => `
+    <tr>
+      <td>${d.operador}</td>
+      <td>${d.lider}</td>
+      <td>${d.inicioConexao}</td>
+      <td>${d.fimConexao}</td>
+      <td>${d.inicioAlmoco}</td>
+      <td>${d.fimAlmoco}</td>
+      <td>${d.descanso1}</td>
+      <td>${d.descanso2}</td>
+      <td>${d.status}</td>
+    </tr>`).join('');
+}
+
+function filtrarTabela(coluna) {
+  const input = document.querySelectorAll('thead input')[coluna];
+  const filtro = input.value.toLowerCase();
+  const tabela = document.getElementById("tabelaOperadores");
+  const linhas = tabela.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+
+  for (let i = 0; i < linhas.length; i++) {
+    const celulas = linhas[i].getElementsByTagName("td");
+    if (celulas.length > coluna) {
+      const texto = celulas[coluna].textContent || celulas[coluna].innerText;
+      linhas[i].style.display = texto.toLowerCase().indexOf(filtro) > -1 ? "" : "none";
+    }
+  }
+}
+
+function baixarExcel() {
+  if (dados.length === 0) return alert('Nada para exportar.');
+  const ws = XLSX.utils.json_to_sheet(dados);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Horários");
+  XLSX.writeFile(wb, "horarios_operadores.xlsx");
+}
+</script>
+</body>
+</html>
