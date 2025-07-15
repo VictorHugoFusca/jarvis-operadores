@@ -64,23 +64,23 @@ function processarDados() {
   const linhas = input.split('\n').filter(l => l.trim() !== '');
 
   linhas.forEach(linha => {
-    const partes = linha.split(/\s{2,}|\t|\|/).map(s => s.trim()).filter(Boolean);
-    if (partes.length >= 9) {
-      const [operador, lider, inicioConexao, fimConexao, inicioAlmoco, fimAlmoco, descanso1, descanso2, ...rest] = partes;
-      const status = rest.join(' ') || 'Turno programado';
+    const partes = linha.split(/\t|\|/).map(s => s.trim());
 
-      dados.push({
-        operador,
-        lider,
-        inicioConexao,
-        fimConexao,
-        inicioAlmoco,
-        fimAlmoco,
-        descanso1,
-        descanso2,
-        status
-      });
-    }
+    while (partes.length < 9) partes.push('');
+
+    const [operador, lider, inicioConexao, fimConexao, inicioAlmoco, fimAlmoco, descanso1, descanso2, status] = partes;
+
+    dados.push({
+      operador,
+      lider,
+      inicioConexao,
+      fimConexao,
+      inicioAlmoco,
+      fimAlmoco,
+      descanso1,
+      descanso2,
+      status: status || 'Turno programado'
+    });
   });
 
   carregarTabela();
