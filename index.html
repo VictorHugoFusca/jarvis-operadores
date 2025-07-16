@@ -3,53 +3,316 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tabela Dinâmica - Horários dos Operadores</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <title>Horários dos Operadores - JARVIS</title>
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" href="/icon-192.png" type="image/png">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #2d3748;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      text-align: center;
+      color: #718096;
+      font-size: 1rem;
+    }
+
+    .controls {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #4a5568;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      resize: vertical;
+      transition: border-color 0.3s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #48bb78, #38a169);
+      color: white;
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #f56565, #e53e3e);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+    }
+
+    .table-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px;
+    }
+
+    th {
+      background: linear-gradient(135deg, #f7fafc, #edf2f7);
+      padding: 16px 12px;
+      font-weight: 600;
+      color: #2d3748;
+      border-bottom: 2px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
     th input {
       width: 100%;
-      font-size: 0.9rem;
-      padding: 4px;
-      box-sizing: border-box;
+      padding: 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-top: 8px;
+      transition: border-color 0.3s ease;
+    }
+
+    th input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #4a5568;
+    }
+
+    tr:hover {
+      background-color: #f8fafc;
+    }
+
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #e6fffa;
+      color: #234e52;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #a0aec0;
+      font-style: italic;
+      padding: 40px;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .stats-item {
+      text-align: center;
+    }
+
+    .stats-number {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .stats-label {
+      font-size: 0.875rem;
+      color: #718096;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 16px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        justify-content: center;
+      }
+
+      .stats {
+        flex-direction: column;
+        gap: 12px;
+      }
     }
   </style>
 </head>
-<body class="bg-light">
-<div class="container my-5">
-  <h1 class="text-center mb-4">📊 Tabela Dinâmica - Horários dos Operadores</h1>
-
-  <div class="alert alert-info">
-    <strong>ℹ️ Informações:</strong> Esta tabela apresenta os horários organizados por operador diretamente do JARVIS, incluindo início e fim do almoço e descansos.
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Horários dos Operadores</h1>
+    <p>Sistema integrado JARVIS - Gestão de horários e escalas</p>
   </div>
 
-  <div class="mb-4">
-    <textarea id="dadosInput" class="form-control mb-2" rows="6" placeholder="📋 Cole aqui os dados no formato: Nome Operador | Nome Líder | Início Conexão | Fim Conexão | Início Almoço | Fim Almoço | Descanso 1 | Descanso 2 | Status"></textarea>
-    <button onclick="processarDados()" class="btn btn-success me-2">📊 Processar Dados</button>
-    <button onclick="limparDados()" class="btn btn-danger me-2">🗑️ Limpar Dados</button>
-    <button onclick="baixarExcel()" class="btn btn-primary">📥 Baixar Excel</button>
+  <div class="controls">
+    <div class="input-group">
+      <label for="dadosInput">📋 Dados dos Operadores</label>
+      <textarea id="dadosInput" rows="5" placeholder="Cole aqui os dados no formato: Nome Operador | Nome Líder | Início Conexão | Fim Conexão | Início Almoço | Fim Almoço | Descanso 1 | Descanso 2 | Status"></textarea>
+    </div>
+    <div class="button-group">
+      <button onclick="processarDados()" class="btn btn-success">
+        <span>📊</span> Processar Dados
+      </button>
+      <button onclick="limparDados()" class="btn btn-danger">
+        <span>🗑️</span> Limpar Tudo
+      </button>
+      <button onclick="baixarExcel()" class="btn btn-primary">
+        <span>📥</span> Exportar Excel
+      </button>
+    </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-bordered table-hover" id="tabelaOperadores">
-      <thead class="table-light">
-        <tr>
-          <th>Operador<br><input type="text" onkeyup="filtrarTabela(0)" placeholder="Filtrar"></th>
-          <th>Líder<br><input type="text" onkeyup="filtrarTabela(1)" placeholder="Filtrar"></th>
-          <th>Início Conexão<br><input type="text" onkeyup="filtrarTabela(2)" placeholder="Filtrar"></th>
-          <th>Fim Conexão<br><input type="text" onkeyup="filtrarTabela(3)" placeholder="Filtrar"></th>
-          <th>Início Almoço<br><input type="text" onkeyup="filtrarTabela(4)" placeholder="Filtrar"></th>
-          <th>Fim Almoço<br><input type="text" onkeyup="filtrarTabela(5)" placeholder="Filtrar"></th>
-          <th>Descanso 1<br><input type="text" onkeyup="filtrarTabela(6)" placeholder="Filtrar"></th>
-          <th>Descanso 2<br><input type="text" onkeyup="filtrarTabela(7)" placeholder="Filtrar"></th>
-          <th>Status<br><input type="text" onkeyup="filtrarTabela(8)" placeholder="Filtrar"></th>
-        </tr>
-      </thead>
-      <tbody id="corpoTabela">
-        <tr><td colspan="9" class="text-center text-muted">Nenhum dado carregado.</td></tr>
-      </tbody>
-    </table>
+  <div class="table-container">
+    <div class="stats" id="statsContainer" style="display: none;">
+      <div class="stats-item">
+        <div class="stats-number" id="totalOperadores">0</div>
+        <div class="stats-label">Operadores</div>
+      </div>
+      <div class="stats-item">
+        <div class="stats-number" id="totalLideres">0</div>
+        <div class="stats-label">Líderes</div>
+      </div>
+      <div class="stats-item">
+        <div class="stats-number" id="operadoresAtivos">0</div>
+        <div class="stats-label">Ativos</div>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table id="tabelaOperadores">
+        <thead>
+          <tr>
+            <th>Operador<input type="text" onkeyup="filtrarTabela(0)" placeholder="Filtrar..."></th>
+            <th>Líder<input type="text" onkeyup="filtrarTabela(1)" placeholder="Filtrar..."></th>
+            <th>Início<input type="text" onkeyup="filtrarTabela(2)" placeholder="Filtrar..."></th>
+            <th>Fim<input type="text" onkeyup="filtrarTabela(3)" placeholder="Filtrar..."></th>
+            <th>Almoço Início<input type="text" onkeyup="filtrarTabela(4)" placeholder="Filtrar..."></th>
+            <th>Almoço Fim<input type="text" onkeyup="filtrarTabela(5)" placeholder="Filtrar..."></th>
+            <th>Descanso 1<input type="text" onkeyup="filtrarTabela(6)" placeholder="Filtrar..."></th>
+            <th>Descanso 2<input type="text" onkeyup="filtrarTabela(7)" placeholder="Filtrar..."></th>
+            <th>Status<input type="text" onkeyup="filtrarTabela(8)" placeholder="Filtrar..."></th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabela">
+          <tr><td colspan="9" class="empty-state">Nenhum dado carregado. Cole os dados acima e clique em "Processar Dados".</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -58,14 +321,16 @@ let dados = [];
 
 function processarDados() {
   const input = document.getElementById('dadosInput').value.trim();
-  if (!input) return alert('Cole os dados primeiro.');
+  if (!input) {
+    alert('⚠️ Cole os dados primeiro.');
+    return;
+  }
 
   dados = [];
   const linhas = input.split('\n').filter(l => l.trim() !== '');
 
   linhas.forEach(linha => {
     const partes = linha.split(/\t|\|/).map(s => s.trim());
-
     while (partes.length < 9) partes.push('');
 
     const [operador, lider, inicioConexao, fimConexao, inicioAlmoco, fimAlmoco, descanso1, descanso2, status] = partes;
@@ -84,25 +349,28 @@ function processarDados() {
   });
 
   carregarTabela();
-  alert(`${dados.length} registros carregados.`);
+  atualizarEstatisticas();
+  alert(`✅ ${dados.length} registros carregados com sucesso!`);
 }
 
 function limparDados() {
   document.getElementById('dadosInput').value = '';
   dados = [];
   carregarTabela();
+  atualizarEstatisticas();
+  document.getElementById('statsContainer').style.display = 'none';
 }
 
 function carregarTabela() {
   const corpo = document.getElementById('corpoTabela');
   if (dados.length === 0) {
-    corpo.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Nenhum dado.</td></tr>';
+    corpo.innerHTML = '<tr><td colspan="9" class="empty-state">Nenhum dado carregado. Cole os dados acima e clique em "Processar Dados".</td></tr>';
     return;
   }
 
   corpo.innerHTML = dados.map(d => `
     <tr>
-      <td>${d.operador}</td>
+      <td><strong>${d.operador}</strong></td>
       <td>${d.lider}</td>
       <td>${d.inicioConexao}</td>
       <td>${d.fimConexao}</td>
@@ -110,8 +378,21 @@ function carregarTabela() {
       <td>${d.fimAlmoco}</td>
       <td>${d.descanso1}</td>
       <td>${d.descanso2}</td>
-      <td>${d.status}</td>
+      <td><span class="status-badge">${d.status}</span></td>
     </tr>`).join('');
+}
+
+function atualizarEstatisticas() {
+  if (dados.length === 0) return;
+
+  const totalOperadores = dados.length;
+  const lideres = new Set(dados.map(d => d.lider).filter(l => l)).size;
+  const ativos = dados.filter(d => d.status && d.status.toLowerCase().includes('programado')).length;
+
+  document.getElementById('totalOperadores').textContent = totalOperadores;
+  document.getElementById('totalLideres').textContent = lideres;
+  document.getElementById('operadoresAtivos').textContent = ativos;
+  document.getElementById('statsContainer').style.display = 'flex';
 }
 
 function filtrarTabela(coluna) {
@@ -130,11 +411,31 @@ function filtrarTabela(coluna) {
 }
 
 function baixarExcel() {
-  if (dados.length === 0) return alert('Nada para exportar.');
-  const ws = XLSX.utils.json_to_sheet(dados);
+  if (dados.length === 0) {
+    alert('⚠️ Nenhum dado para exportar.');
+    return;
+  }
+  
+  const dadosExcel = dados.map(d => ({
+    'Operador': d.operador,
+    'Líder': d.lider,
+    'Início Conexão': d.inicioConexao,
+    'Fim Conexão': d.fimConexao,
+    'Início Almoço': d.inicioAlmoco,
+    'Fim Almoço': d.fimAlmoco,
+    'Descanso 1': d.descanso1,
+    'Descanso 2': d.descanso2,
+    'Status': d.status
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(dadosExcel);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Horários");
-  XLSX.writeFile(wb, "horarios_operadores.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "Horários dos Operadores");
+  
+  const hoje = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `horarios_operadores_${hoje}.xlsx`);
+  
+  alert('✅ Arquivo Excel baixado com sucesso!');
 }
 </script>
 </body>
